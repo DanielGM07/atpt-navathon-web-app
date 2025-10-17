@@ -22,6 +22,9 @@ import AirIcon from '@mui/icons-material/Air'
 import WarningAmberIcon from '@mui/icons-material/WarningAmber'
 import RefreshIcon from '@mui/icons-material/Refresh'
 
+// Asegúrate de que importes HydroTowerDeluxe2D correctamente
+import { HydroTowerDeluxe2D } from './HydroTower.jsx' // Ruta correcta a tu archivo HydroTower.jsx
+
 /**
  * Panel de control para torre hidropónica (primer vistazo)
  *
@@ -138,7 +141,6 @@ export default function HydroponicDashboard({ data, onRefresh, ranges = defaultR
     color: waterIsLow ? 'error' : 'success',
   }
 
-  // Para la barra de agua, normalizamos 0–30cm como rango visual (ajustá según tu tanque)
   const waterProgress = percent(waterLevelCm, 0, Math.max(30, waterLevelMinCm + 10))
 
   return (
@@ -233,16 +235,36 @@ export default function HydroponicDashboard({ data, onRefresh, ranges = defaultR
           />
         </Grid>
 
+        {/* HydroTowerDeluxe2D */}
+        {/* <Grid item xs={12} md={6}>
+          <Card variant="outlined" sx={{ height: '100%' }}>
+            <CardHeader
+              title="Torre Hidropónica 2D"
+            />
+            <CardContent>
+              <HydroTowerDeluxe2D
+                nivelAgua={data.nivelAgua}
+                luz={data.luz}
+                ph={data.ph}
+                temp={data.temperatureC}
+                humedad={data.humidityPct}
+                minAgua={data.minWaterLevelReached}
+                className="w-full"
+              />
+            </CardContent>
+          </Card>
+        </Grid> */}
+
         {/* Nivel de agua */}
         <Grid item xs={12} md={6}>
           <Card variant="outlined" sx={{ height: '100%' }}>
             <CardHeader
-              title={
+              title={(
                 <Stack direction="row" alignItems="center" spacing={1}>
                   <WaterDropIcon color="primary" />
                   <Typography variant="h6">Nivel de agua</Typography>
                 </Stack>
-              }
+              )}
               sx={{ pb: 0.5 }}
             />
             <CardContent>
@@ -285,31 +307,6 @@ export default function HydroponicDashboard({ data, onRefresh, ranges = defaultR
             </CardContent>
           </Card>
         </Grid>
-
-        {/* Última actualización / meta info */}
-        <Grid item xs={12} md={6}>
-          <Card variant="outlined" sx={{ height: '100%' }}>
-            <CardHeader title="Estado general" sx={{ pb: 0.5 }} />
-            <CardContent>
-              <Stack spacing={1.25}>
-                <StatusRow label="Sensores" value="Online" color="success" />
-                <StatusRow
-                  label="Bomba de riego"
-                  value={waterIsLow ? 'Revisar (nivel bajo)' : 'OK'}
-                  color={waterIsLow ? 'warning' : 'success'}
-                />
-                <StatusRow label="Solución nutritiva" value={phStatus.label} color={phStatus.color} />
-                <Divider />
-                <Typography variant="body2" color="text.secondary">
-                  Última actualización: {new Date(updatedAt).toLocaleString()}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  * Los rangos son genéricos. Ajustá por cultivo/etapa fenológica.
-                </Typography>
-              </Stack>
-            </CardContent>
-          </Card>
-        </Grid>
       </Grid>
     </Box>
   )
@@ -331,66 +328,3 @@ StatusRow.propTypes = {
   value: PropTypes.string.isRequired,
   color: PropTypes.oneOf(['default', 'primary', 'secondary', 'success', 'warning', 'error', 'info']),
 }
-
-/* ========== Ejemplo de uso rápido (mock) ==========
-import HydroponicDashboard from "@/components/HydroponicDashboard";
-
-export default function TowerPage() {
-  const [data, setData] = React.useState({
-    ph: 6.1,
-    temperatureC: 24.3,
-    humidityPct: 62,
-    lightPct: 78,
-    waterLevelCm: 17.5,
-    waterLevelMinCm: 12,
-    minWaterLevelReached: false,
-    updatedAt: Date.now(),
-  });
-
-  const handleRefresh = () => {
-    // Acá conectarías con RTK Query para traer lecturas reales:
-    // dispatch(api.endpoints.getTowerReadings.initiate())
-    // En este mock, solo variamos un poco:
-    setData((d) => ({
-      ...d,
-      ph: +(d.ph + (Math.random() * 0.2 - 0.1)).toFixed(1),
-      temperatureC: +(d.temperatureC + (Math.random() * 0.6 - 0.3)).toFixed(1),
-      humidityPct: Math.max(0, Math.min(100, Math.round(d.humidityPct + (Math.random() * 4 - 2)))),
-      updatedAt: Date.now(),
-    }));
-  };
-
-  return <HydroponicDashboard data={data} onRefresh={handleRefresh} />;
-}
-==================================================== */
-
-/* ========== RTK Query (borrador de endpoint) ==========
- // apis/towerApi.js
- import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-
- export const towerApi = createApi({
-   reducerPath: "towerApi",
-   baseQuery: fetchBaseQuery({ baseUrl: import.meta.env.VITE_APP_API_BASE_URL }),
-   endpoints: (builder) => ({
-     getTowerReadings: builder.query({
-       query: (towerId) => `/api/towers/${towerId}/readings/latest`,
-       transformResponse: (res) => ({
-         ph: res.ph,
-         temperatureC: res.temperatureC,
-         humidityPct: res.humidityPct,
-         lightPct: res.lightPct,
-         waterLevelCm: res.waterLevelCm,
-         waterLevelMinCm: res.waterLevelMinCm,
-         minWaterLevelReached: res.minWaterLevelReached,
-         updatedAt: res.updatedAt,
-       }),
-     }),
-   }),
- });
-
- export const { useGetTowerReadingsQuery } = towerApi;
-
- // En un componente:
- const { data, refetch, isFetching } = useGetTowerReadingsQuery("tower-01");
- <HydroponicDashboard data={data} onRefresh={refetch} />
-====================================================== */
