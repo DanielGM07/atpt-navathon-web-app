@@ -389,7 +389,7 @@ export default function TowerHistoryPage() {
     <Box sx={{ display: 'grid', gap: 2 }}>
       <Card>
         <CardHeader
-          title="Datos históricos"
+          title="Grafico en Tiempo Real"
           subheader="Vista en vivo (últimos 2 min) + actualización cada 2s. Cortes en gris a mitad de escala."
         />
         <CardContent>

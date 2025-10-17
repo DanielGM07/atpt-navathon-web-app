@@ -1,6 +1,6 @@
 // src/pages/TowerDashboard.jsx
 import React from "react";
-import HydroponicDashboard from "./components/HydroponicDashboard";
+import HydroponicDashboard from "./components/dashboard/HydroponicDashboard";
 // ajustá la ruta si guardaste la api en otro lado:
 import { useGetLatestTowerLogQuery } from "../apis/tower-log/tower-log.api";
 

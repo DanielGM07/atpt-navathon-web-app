@@ -102,7 +102,7 @@ export default function Crops() {
               </Box>
               <Box>
                 <Typography variant="h5" fontWeight={700}>
-                  Catálogo de Cultivos
+                  Cultivos y Consejos
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
                   Guía completa para tu torre hidropónica
@@ -110,7 +110,7 @@ export default function Crops() {
               </Box>
             </Box>
 
-            <Chip label="Catálogo de Cultivos" color="default" variant="outlined" />
+            {/* <Chip label="Catálogo de Cultivos" color="default" variant="outlined" /> */}
           </Box>
         </Container>
       </Box>
