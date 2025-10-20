@@ -14,6 +14,13 @@ import DeviceThermostatIcon from '@mui/icons-material/DeviceThermostat'
 import AirIcon from '@mui/icons-material/Air'
 import LightModeIcon from '@mui/icons-material/LightMode'
 
+/* ===== SOLO AÑADIDO: helper para normalizar luz (600 → 0%, 1000 → 100%) ===== */
+const lightToPct = raw => {
+  if (!Number.isFinite(raw)) return NaN
+  const pct = ((raw - 600) * 100) / 400
+  return Math.max(0, Math.min(100, pct))
+}
+
 export default function HydroponicDashboard({ data, onRefresh, ranges = defaultRanges }) {
   const {
     ph = 6.0,
@@ -24,23 +31,34 @@ export default function HydroponicDashboard({ data, onRefresh, ranges = defaultR
     waterLevelMinCm = 12,
   } = data || {}
 
+  /* ===== SOLO AÑADIDO: normalizar luz para que coincida con Datos Históricos =====
+	   Si viene lightPct ya en %, se usa tal cual.
+	   Si viene crudo (light/lux ~ 600–1000), se convierte a % con lightToPct.
+	*/
+  const rawLight = Number(data?.light ?? data?.lux)
+  const lightPctNormalized = Number.isFinite(lightPct)
+    ? lightPct
+    : Number.isFinite(rawLight)
+      ? lightToPct(rawLight)
+      : NaN
+
   // estados por métrica
   const phS = getBandStatus(ph, ranges.ph).label
-  const tS  = getBandStatus(temperatureC, ranges.temperatureC).label
-  const hS  = getBandStatus(humidityPct, ranges.humidityPct).label
-  const lS  = getBandStatus(lightPct, ranges.lightPct).label
+  const tS = getBandStatus(temperatureC, ranges.temperatureC).label
+  const hS = getBandStatus(humidityPct, ranges.humidityPct).label
+  const lS = getBandStatus(Number.isFinite(lightPctNormalized) ? lightPctNormalized : 0, ranges.lightPct).label
 
   // estado sistema
   const anyCritical = minWaterLevelReached || [phS, tS, hS, lS].includes('Crítico')
-  const anyWarning  = !anyCritical && [phS, tS, hS, lS].includes('Atento')
+  const anyWarning = !anyCritical && [phS, tS, hS, lS].includes('Atento')
   const systemLevel = anyCritical ? 'Crítico' : anyWarning ? 'Alerta' : 'Estable'
 
   const notes = []
   if (minWaterLevelReached) notes.push('Nivel de agua: Mínimo')
   if (phS === 'Crítico' || phS === 'Atento') notes.push(`pH: ${phS}`)
-  if (tS  === 'Crítico' || tS  === 'Atento') notes.push(`Temperatura: ${tS}`)
-  if (hS  === 'Crítico' || hS  === 'Atento') notes.push(`Humedad: ${hS}`)
-  if (lS  === 'Crítico' || lS  === 'Atento') notes.push(`Luz: ${lS}`)
+  if (tS === 'Crítico' || tS === 'Atento') notes.push(`Temperatura: ${tS}`)
+  if (hS === 'Crítico' || hS === 'Atento') notes.push(`Humedad: ${hS}`)
+  if (lS === 'Crítico' || lS === 'Atento') notes.push(`Luz: ${lS}`)
 
   return (
     <Box sx={{ p: 2 }}>
@@ -105,10 +123,10 @@ export default function HydroponicDashboard({ data, onRefresh, ranges = defaultR
           <MetricTile
             title="Nivel de luz"
             icon={<LightModeIcon color="primary" />}
-            value={lightPct.toFixed(0)}
+            value={(Number.isFinite(lightPctNormalized) ? lightPctNormalized : 0).toFixed(0)}
             unit="%"
-            status={getBandStatus(lightPct, ranges.lightPct)}
-            footerHint={`Rango objetivo: ${ranges.lightPct.ok[0]}–${ranges.lightPct.ok[1]}%`}
+            status={getBandStatus(Number.isFinite(lightPctNormalized) ? lightPctNormalized : 0, ranges.lightPct)}
+            footerHint={`Sensor 600–1000 → 0–100% · Objetivo: ${ranges.lightPct.ok[0]}–${ranges.lightPct.ok[1]}%`}
             progressMin={0}
             progressMax={100}
           />
@@ -130,6 +148,8 @@ HydroponicDashboard.propTypes = {
     lightPct: PropTypes.number,
     minWaterLevelReached: PropTypes.bool,
     waterLevelMinCm: PropTypes.number,
+    light: PropTypes.number,
+    lux: PropTypes.number,
   }),
   onRefresh: PropTypes.func,
   ranges: PropTypes.object,

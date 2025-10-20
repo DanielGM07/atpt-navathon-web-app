@@ -1,13 +1,6 @@
 // src/pages/TowerHistory.jsx
 import React from 'react'
-import {
-  Box,
-  Card,
-  CardHeader,
-  CardContent,
-  Snackbar,
-  Alert,
-} from '@mui/material'
+import { Box, Card, CardHeader, CardContent, Snackbar, Alert } from '@mui/material'
 import { useTheme, alpha as muiAlpha } from '@mui/material/styles'
 
 import {
@@ -24,10 +17,7 @@ import {
 } from 'chart.js'
 import 'chartjs-adapter-date-fns'
 
-import {
-  useListTowerLogsQuery,
-  useGetLatestTowerLogQuery,
-} from '../apis/tower-log/tower-log.api'
+import { useListTowerLogsQuery, useGetLatestTowerLogQuery } from '../apis/tower-log/tower-log.api'
 
 ChartJS.register(
   LineController,
@@ -47,7 +37,7 @@ const VIEW_MS = 2 * 60 * 1000 // ⬅️ ventana visible: últimos 2 minutos
 
 // ----- Utils
 
-const toTs = (v) => {
+const toTs = v => {
   if (v == null) return NaN
   const n = typeof v === 'number' ? v : Date.parse(v)
   if (!Number.isFinite(n)) return NaN
@@ -56,20 +46,13 @@ const toTs = (v) => {
 
 // contempla `log_time` (tu backend)
 function mapRow(row) {
-  const t = toTs(
-    row.log_time ??
-    row.timestamp ??
-    row.created_at ??
-    row.createdAt ??
-    row.date ??
-    row.t ??
-    row.time
-  )
+  const t = toTs(row.log_time ?? row.timestamp ?? row.created_at ?? row.createdAt ?? row.date ?? row.t ?? row.time)
 
   const ph = Number(row.ph ?? row.pH)
   const temp = Number(row.temperature ?? row.temperatureC ?? row.temp)
   const hum = Number(row.humidity ?? row.humidityPct ?? row.hum)
-  const light = Number(row.light ?? row.lightPct ?? row.lux)
+  const rawLight = Number(row.light ?? row.lightPct ?? row.lux)
+  const light = Number.isFinite(rawLight) ? Math.max(0, Math.min(100, ((rawLight - 600) * 100) / 400)) : NaN
 
   return { t, ph, temp, hum, light }
 }
@@ -172,7 +155,8 @@ export default function TowerHistoryPage() {
       type: 'line',
       data: {
         datasets: [
-          { // overlay gris yMain
+          {
+            // overlay gris yMain
             label: 'Sin datos (Temp/Humedad/Luz)',
             data: [],
             yAxisID: 'yMain',
@@ -181,7 +165,8 @@ export default function TowerHistoryPage() {
             pointRadius: 0,
             borderWidth: 2,
           },
-          { // overlay gris pH
+          {
+            // overlay gris pH
             label: 'Sin datos (pH)',
             data: [],
             yAxisID: 'yPH',
@@ -225,7 +210,7 @@ export default function TowerHistoryPage() {
             spanGaps: false,
           },
           {
-            label: 'Luz',
+            label: 'Luz (%)',
             data: [],
             yAxisID: 'yMain',
             borderColor: colors.light.border,
@@ -249,7 +234,7 @@ export default function TowerHistoryPage() {
           tooltip: {
             intersect: false,
             callbacks: {
-              beforeBody: (items) => {
+              beforeBody: items => {
                 if (!items?.length) return
                 const x = items[0].parsed.x
                 const gap = gapsRef.current.find(g => x >= g.start && x <= g.end)
@@ -296,8 +281,8 @@ export default function TowerHistoryPage() {
           },
           yPH: {
             position: 'right',
-            min: 5,
-            max: 7,
+            min: 0,
+            max: 10,
             title: { display: true, text: 'pH', color: colors.text },
             grid: { drawOnChartArea: false, color: colors.grid },
             ticks: { color: colors.text },
@@ -403,14 +388,12 @@ export default function TowerHistoryPage() {
         open={snack.open}
         autoHideDuration={4000}
         onClose={() => setSnack(s => ({ ...s, open: false }))}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
         <Alert
           onClose={() => setSnack(s => ({ ...s, open: false }))}
           severity="info"
           variant="filled"
-          sx={{ width: '100%' }}
-        >
+          sx={{ width: '100%' }}>
           {snack.msg}
         </Alert>
       </Snackbar>
